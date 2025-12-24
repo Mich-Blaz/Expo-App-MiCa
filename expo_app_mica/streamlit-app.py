@@ -1,6 +1,7 @@
 import streamlit as st
 import sys
 import os
+from dotenv import load_dotenv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from expo_app_mica.db_utils import get_products_df, add_product, delete_product
