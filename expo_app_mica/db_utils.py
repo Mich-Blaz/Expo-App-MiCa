@@ -11,18 +11,9 @@ import pandas as pd
 # Charger les variables d'environnement (optionnel en production)
 load_dotenv()  # Ignoré si .env n'existe pas
 
-def get_database_url():
-    """Construit l'URL de connexion PostgreSQL"""
-    user = os.getenv('POSTGRES_USER', 'myuser')
-    password = os.getenv('POSTGRES_PASSWORD', 'mypassword')
-    host = os.getenv('POSTGRES_HOST', 'localhost')
-    port = os.getenv('POSTGRES_PORT', '5432')
-    db = os.getenv('POSTGRES_DB', 'mydb')
-    
-    return f'postgresql://{user}:{password}@{host}:{port}/{db}'
 
 # Créer l'engine
-engine = create_engine(get_database_url())
+engine = create_engine(os.environ['DATABASE_URL'], echo=False)
 Session = sessionmaker(bind=engine)
 
 def get_all_products():
