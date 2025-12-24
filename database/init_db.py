@@ -8,6 +8,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
 from database.models import Base, Product
 
+
+
+os.environ['HTTP_PROXY'] = "http://127.0.0.1:9000/localproxy-e60003fe.pac"
+os.environ['HTTPS_PROXY'] = "http://127.0.0.1:9000/localproxy-e60003fe.pac"
+os.environ['HTTP_PROXY'.lower()] = "http://127.0.0.1:9000/localproxy-e60003fe.pac"
+os.environ['HTTPS_PROXY'.lower()] = "http://127.0.0.1:9000/localproxy-e60003fe.pac"
+
+
 # Charger les variables d'environnement (optionnel en production)
 load_dotenv()  # Ignoré si .env n'existe pas
 
@@ -37,8 +45,8 @@ def init_database():
     """Crée la base de données et ajoute des données d'exemple"""
     
     # Créer la connexion
-    database_url = get_database_url()
-    print(f"📡 Connexion à: {database_url.replace(os.getenv('POSTGRES_PASSWORD', ''), '***')}")
+    database_url = os.environ['DATABASE_URL']
+    print(f"📡 Connexion à: '{database_url[:26]}**************{database_url[40:]}')")
     
     engine = create_engine(database_url, echo=True)
     

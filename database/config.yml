@@ -23,3 +23,24 @@ columns_api :
   -  qfap_tags
 
 url_api: "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/que-faire-a-paris-/records"
+
+date_model: 
+  Event:
+    -  event_id
+    -  url
+    -  title
+    -  lead_text
+    -  description
+    -  date_start
+    -  date_end
+    -  title_event
+    -  qfap_tags
+    -  location_id 
+    -  updated_at
+    
+  Location:
+    -  Location_id
+    -  Address_name
+    -  Address_city
+    -  Address_zipcode
+    -  Lat_long
