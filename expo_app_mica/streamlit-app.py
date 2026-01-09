@@ -63,7 +63,7 @@ if action == "Select New Events !":
     
     
     if not st.session_state.data.empty:
-        st.session_state['temporary_data'] = st.data_editor(st.session_state.data['cols_run'].sort_values(by='updated_at',ascending=False))
+        st.session_state['temporary_data'] = st.data_editor(st.session_state.data[st.session_state['cols_run']].sort_values(by='updated_at',ascending=False))
         id_simil = st.session_state['temporary_data'][['flag_interest','event_id']].sort_values(by='event_id') == st.session_state.data[['flag_interest','event_id']].sort_values(by='event_id')
         st.dataframe(st.session_state['data'].sort_values(by='event_id')[id_simil])
 
