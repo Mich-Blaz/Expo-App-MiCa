@@ -14,6 +14,9 @@ st.set_page_config(
 )
 load_dotenv()
 
+if "cols_run" not in st.session_state:
+    st.session_state['cols_run'] = ['flag_interest ','event_id','title','date_start','date_end','address_name','qfap_tags']
+
 if "data" not in st.session_state:
     st.session_state['data'] = get_all_events()
 
@@ -60,8 +63,11 @@ if action == "Select New Events !":
     
     
     if not st.session_state.data.empty:
-        pass
-  
+        st.session_state['temporary_data'] = st.data_editor(st.session_state.data['cols_run'].sort_values(by='updated_at',ascending=False))
+        id_simil = st.session_state['temporary_data'][['flag_interest','event_id']].sort_values(by='event_id') == st.session_state.data[['flag_interest','event_id']].sort_values(by='event_id')
+        st.dataframe(st.session_state['data'].sort_values(by='event_id')[id_simil])
+
+
 elif action == "See my interests":
     st.header("arrive sooooon")
     
