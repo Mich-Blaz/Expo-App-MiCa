@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import update,create_engine 
 from sqlalchemy.orm import sessionmaker
 
+
 def update_events_interest_flag(event_ids_totrueflag,event_ids_to_falseflag,engine):
     Session = sessionmaker(bind=engine)
     session = Session()

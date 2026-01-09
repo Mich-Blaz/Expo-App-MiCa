@@ -1,9 +1,11 @@
+from sqlalchemy import create_engine
 import streamlit as st
 import sys
 import os
 from dotenv import load_dotenv
+import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+from database.db_utils import update_events_interest_flag
 from expo_app_mica.apputils import get_all_events
 
 # Configuration de la page
@@ -63,13 +65,45 @@ if action == "Select New Events !":
     
     
     if not st.session_state.data.empty:
-        st.session_state['temporary_data'] = st.data_editor(st.session_state.data[st.session_state['cols_run']].sort_values(by='updated_at',ascending=False))
-        id_simil = st.session_state['temporary_data'][['flag_interest','event_id']].sort_values(by='event_id') == st.session_state.data[['flag_interest','event_id']].sort_values(by='event_id')
-        st.dataframe(st.session_state['data'].sort_values(by='event_id')[id_simil])
+        df_edited = st.data_editor(
+            st.session_state.data[st.session_state["cols_run"]]
+                .sort_values(by="updated_at", ascending=False),
+            key="editor"
+        )        
+        edited_rows = st.session_state["editor"]["edited_rows"]
+        st.write('edited_rows:', edited_rows)
+        if edited_rows:
+            changed = []
+            for idx, changed_values in edited_rows.items():
+                row = df_edited.iloc[idx].copy()
+                for col, value in changed_values.items():
+                    row[col] = value
+                changed.append(row)
 
+            df_changed = pd.DataFrame(changed)
+            st.dataframe(df_changed)
+            l = [{'event_id': row['event_id'], 'flag_interest': row['flag_interest']} for _, row in df_changed.iterrows()]
+            with st.form("update database with interest choices"):
+                submitted = st.form_submit_button("Update database")
+                if submitted:
+                    event_ids_totrueflag = df_changed[df_changed['flag_interest']==True]['event_id'].tolist()
+                    event_ids_to_falseflag = df_changed[df_changed['flag_interest']==False]['event_id'].tolist()
+                    engine = create_engine(os.environ['DATABASE_URL'], echo=False,  pool_pre_ping=True, pool_size=5,    max_overflow=10)
+                    update_events_interest_flag(event_ids_totrueflag,event_ids_to_falseflag,engine)
+                    st.success("Database updated successfully!")
+                    get_all_events.clear()
+                    st.session_state['data'] = get_all_events()
+            st.button('Reload pleaaase')
 
 elif action == "See my interests":
-    st.header("arrive sooooon")
+    st.header("My interested Events !")
+    df_interests = st.session_state.data[st.session_state.data['flag_interest']==True]
+    if not df_interests.empty:  
+        st.dataframe(
+            df_interests[st.session_state["cols_run"]]
+                .sort_values(by="updated_at", ascending=False),
+            use_container_width=True
+        )
     
     # with st.form("add_product_form"):
     #     name = st.text_input("Nom du produit")

@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database.models import Events
+from database.db_utils import update_events_interest_flag
 import pandas as pd
 import streamlit as st
 # Charger les variables d'environnement (optionnel en production)
@@ -30,3 +31,21 @@ def get_all_events():
     finally:
         session.close()
 
+def update_events_interest_flag(event_ids_totrueflag,event_ids_to_falseflag,engine):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    stmt = (
+        update(Events)
+        .where(Events.event_id.in_(event_ids_totrueflag))
+        .values(flag_interest=True) 
+    )
+    session.execute(stmt)
+    session.commit()
+    stmt = (
+        update(Events)
+        .where(Events.event_id.in_(event_ids_to_falseflag))
+        .values(flag_interest=False) 
+    )
+    session.execute(stmt)
+    session.commit()
+    return True
