@@ -5,70 +5,28 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database.models import Product
+from database.models import Events
 import pandas as pd
-
+import streamlit as st
 # Charger les variables d'environnement (optionnel en production)
 load_dotenv()  # Ignoré si .env n'existe pas
 
 
 # Créer l'engine
-engine = create_engine(os.environ['DATABASE_URL'], echo=False)
+engine = create_engine(os.environ['DATABASE_URL'], echo=False,  pool_pre_ping=True, pool_size=5,    max_overflow=10)
 Session = sessionmaker(bind=engine)
 
-def get_all_products():
-    """Récupère tous les produits"""
+
+@st.cache_data
+def get_all_events():
+    """Récupère tous les events"""
     session = Session()
     try:
-        products = session.query(Product).all()
-        return products
+        events = session.query(Events).all()
+        events = [k.__dict__ for k in events]
+        df = pd.DataFrame(events).drop('_sa_instance_state',axis=1)
+        return df
+
     finally:
         session.close()
 
-def get_products_df():
-    """Récupère les produits sous forme de DataFrame"""
-    session = Session()
-    try:
-        products = session.query(Product).all()
-        data = [{
-            'ID': p.id,
-            'Nom': p.name,
-            'Prix': p.price,
-            'Catégorie': p.category,
-            'Créé le': p.created_at
-        } for p in products]
-        return pd.DataFrame(data)
-    finally:
-        session.close()
-
-def add_product(name, price, category):
-    """Ajoute un nouveau produit"""
-    session = Session()
-    try:
-        new_product = Product(name=name, price=price, category=category)
-        session.add(new_product)
-        session.commit()
-        return True
-    except Exception as e:
-        session.rollback()
-        print(f"Erreur: {e}")
-        return False
-    finally:
-        session.close()
-
-def delete_product(product_id):
-    """Supprime un produit par son ID"""
-    session = Session()
-    try:
-        product = session.query(Product).filter(Product.id == product_id).first()
-        if product:
-            session.delete(product)
-            session.commit()
-            return True
-        return False
-    except Exception as e:
-        session.rollback()
-        print(f"Erreur: {e}")
-        return False
-    finally:
-        session.close()
