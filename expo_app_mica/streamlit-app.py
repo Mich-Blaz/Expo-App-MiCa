@@ -15,7 +15,7 @@ st.set_page_config(
 load_dotenv()
 
 if "cols_run" not in st.session_state:
-    st.session_state['cols_run'] = ['flag_interest ','event_id','title','date_start','date_end','address_name','qfap_tags']
+    st.session_state['cols_run'] = ['flag_interest','event_id','title','date_start','date_end','address_name','qfap_tags']
 
 if "data" not in st.session_state:
     st.session_state['data'] = get_all_events()
