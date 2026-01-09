@@ -1,45 +1,43 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
+from sqlalchemy import create_engine, Column, Integer, String,Boolean, Float, DateTime,Text
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.dialects.postgresql import JSONB
+
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 
 Base = declarative_base()
 
-class Product(Base):
-    __tablename__ = 'products'
+class Events(Base):
+    __tablename__ = 'events'
     
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), nullable=False)
-    price = Column(Float, nullable=False)
-    category = Column(String(50))
-    created_at = Column(DateTime, default=datetime.now)
+    event_id = Column(Integer, primary_key=True)
+    url = Column(Text, nullable=False)
+    title = Column(Text, nullable=False)
+    title_event = Column(Text)
+    lead_text = Column(Text)
+    description = Column(Text)
+    address_name = Column(Text)
+    locations = Column(JSONB)
+    address_street = Column(Text)
+    address_zipcode = Column(Text)
+    address_city = Column(Text)
+    address_text = Column(Text)
+    lat_lon = Column(JSONB)
+    date_start = Column(DateTime, default=datetime.now)
+    date_end = Column(DateTime, default=datetime.now)
+    updated_at = Column(DateTime, default=datetime.now)
+    has_card = Column(Boolean,default=0)
+    access_link = Column(Text)
+    access_link_text = Column(Text)
+    address_url = Column(Text)
+    address_url_text = Column(Text)
+    address_name = Column(Text)
+    qfap_tags = Column(Text)
+    flag_interest = Column(Boolean)
+
+
+
 
     def __repr__(self):
-        return f"<Product(name='{self.name}', price={self.price})>"
+        return f"<Events(event_id='{self.event_id}', title={self.title})>"
 
-
-
-"""
-id                  object
-event_id             int64
-url                 object
-title               object
-lead_text           object
-description         object
-date_start          object
-date_end            object
-locations           object
-address_name        object
-address_street      object
-address_zipcode     object
-address_city        object
-lat_lon             object
-access_link         object
-access_link_text    object
-updated_at          object
-address_url         object
-address_url_text    object
-address_text        object
-title_event         object
-qfap_tags           object
-"""
