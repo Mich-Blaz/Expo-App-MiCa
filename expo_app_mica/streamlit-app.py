@@ -7,6 +7,8 @@ import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.db_utils import update_events_interest_flag
 from expo_app_mica.apputils import get_all_events
+from apputils import transform_lat_lon
+import pydeck as pdk
 
 # Configuration de la page
 st.set_page_config(
@@ -100,10 +102,40 @@ elif action == "See my interests":
     df_interests = st.session_state.data[st.session_state.data['flag_interest']==True]
     if not df_interests.empty:  
         st.dataframe(
-            df_interests[st.session_state["cols_run"]]
+            df_interests#[st.session_state["cols_run"]]
                 .sort_values(by="updated_at", ascending=False),
             use_container_width=True
         )
+        df_ints = transform_lat_lon(df_interests)
+        st.write(df_ints)
+        
+        layer = pdk.Layer(
+            "ScatterplotLayer",
+            data=df_ints,
+            get_position='[lon, lat]',
+            get_radius=60,
+            get_fill_color=[255, 0, 0],
+            pickable=True,
+        )
+
+        view_state = pdk.ViewState(
+            latitude=df_ints["lat"].mean(),
+            longitude=df_ints["lon"].mean(),
+            zoom=12,
+        )
+
+        deck = pdk.Deck(
+            layers=[layer],
+            initial_view_state=view_state,
+            tooltip={
+                "html": """
+                <b>{title}</b><br/>
+                Catégorie : {qfap_tags}
+                """
+            }
+        )
+        st.pydeck_chart(deck)
+
     
     # with st.form("add_product_form"):
     #     name = st.text_input("Nom du produit")
