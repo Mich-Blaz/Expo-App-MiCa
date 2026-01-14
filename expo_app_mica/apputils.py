@@ -2,7 +2,7 @@ import sys
 import os
 from dotenv import load_dotenv
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+from datetime import datetime,timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database.models import Events
@@ -16,6 +16,22 @@ load_dotenv()  # Ignoré si .env n'existe pas
 # Créer l'engine
 engine = create_engine(os.environ['DATABASE_URL'], echo=False,  pool_pre_ping=True, pool_size=5,    max_overflow=10)
 Session = sessionmaker(bind=engine)
+def apply_color(date_end,green=3,orange=8):
+    now = datetime.now()
+    if date_end < now + timedelta(weeks=green):
+        return 'red'
+    elif date_end < now + timedelta(weeks=orange):
+        return 'orange'
+    else:
+        return 'green'
+def transform_lat_lon(df):
+    now = datetime.now()
+    """Transforme la colonne lat_lon en deux colonnes lat et lon"""
+    df['lat'] = df['lat_lon'].apply(lambda x: x['lat'])
+    df['lon'] = df['lat_lon'].apply(lambda x: x['lon'])
+    df['color'] = df['date_end'].apply(lambda x: apply_color(x))
+    return df
+
 
 
 @st.cache_data
