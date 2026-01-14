@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # App MiCa
 **Find the Expositions near you with recommandation !**  
 
