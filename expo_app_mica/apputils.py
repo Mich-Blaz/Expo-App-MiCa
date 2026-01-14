@@ -19,11 +19,11 @@ Session = sessionmaker(bind=engine)
 def apply_color(date_end,green=3,orange=8):
     now = datetime.now()
     if date_end < now + timedelta(weeks=green):
-        return 'red'
+        return (255,69,0)
     elif date_end < now + timedelta(weeks=orange):
-        return 'orange'
+        return (100,65,0)
     else:
-        return 'green'
+        return (124,252,0)
 def transform_lat_lon(df):
     now = datetime.now()
     """Transforme la colonne lat_lon en deux colonnes lat et lon"""
@@ -47,21 +47,3 @@ def get_all_events():
     finally:
         session.close()
 
-def update_events_interest_flag(event_ids_totrueflag,event_ids_to_falseflag,engine):
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    stmt = (
-        update(Events)
-        .where(Events.event_id.in_(event_ids_totrueflag))
-        .values(flag_interest=True) 
-    )
-    session.execute(stmt)
-    session.commit()
-    stmt = (
-        update(Events)
-        .where(Events.event_id.in_(event_ids_to_falseflag))
-        .values(flag_interest=False) 
-    )
-    session.execute(stmt)
-    session.commit()
-    return True

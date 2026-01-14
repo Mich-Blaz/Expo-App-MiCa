@@ -113,8 +113,8 @@ elif action == "See my interests":
             "ScatterplotLayer",
             data=df_ints,
             get_position='[lon, lat]',
-            get_radius=60,
-            get_fill_color=[255, 0, 0],
+            get_radius=80,
+            get_fill_color='color', #tester get_color
             pickable=True,
         )
 
