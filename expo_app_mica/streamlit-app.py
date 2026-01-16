@@ -1,3 +1,4 @@
+from asyncio import events
 from sqlalchemy import create_engine
 import streamlit as st
 import sys
@@ -6,8 +7,8 @@ from dotenv import load_dotenv
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.db_utils import update_events_interest_flag
-from expo_app_mica.apputils import get_all_events
-from apputils import transform_lat_lon,check_password,get_deck_maps
+from expo_app_mica.apputils import get_all_events,expose_selected_item
+from apputils import transform_lat_lon,check_password,get_deck_maps,event_card
 
 # Configuration de la page
 st.set_page_config(
@@ -20,8 +21,8 @@ load_dotenv()
 if "cols_run" not in st.session_state:
     st.session_state['cols_run'] = ['flag_interest','event_id','title','date_start','date_end','address_name','qfap_tags','updated_at']
 
-if "data" not in st.session_state:
-    st.session_state['data'] = get_all_events()
+if "data" not in st.session_state or "categories" not in st.session_state:
+    st.session_state['data'],st.session_state['categories'] = get_all_events()
 
 
 
@@ -44,13 +45,25 @@ if action == "Select New Events !":
     
     
     if not st.session_state.data.empty:
+        dummies = st.session_state.data.qfap_tags.str.get_dummies(sep=";")
+        selected_categories = st.multiselect(
+            "Filter by Categories/Tags:",
+            options=st.session_state.categories,
+            default='Expo'
+        )
+        if selected_categories:
+            mask = dummies[selected_categories].any(axis=1)
+            df_filtered = st.session_state.data[mask]
+        else:
+            df_filtered = st.session_state.data
+        cols_to_remove = [col for col in st.session_state.cols_run if col !='flag_interest']
         df_edited = st.data_editor(
-            st.session_state.data[st.session_state["cols_run"]]
+            df_filtered[st.session_state["cols_run"]]
                 .sort_values(by="updated_at", ascending=False),
-            key="editor"
+            key="editor",disabled=cols_to_remove,
         )        
         edited_rows = st.session_state["editor"]["edited_rows"]
-        st.write('edited_rows:', edited_rows)
+        # st.write('edited_rows:', edited_rows)
         if edited_rows:
             changed = []
             for idx, changed_values in edited_rows.items():
@@ -60,7 +73,7 @@ if action == "Select New Events !":
                 changed.append(row)
 
             df_changed = pd.DataFrame(changed)
-            st.dataframe(df_changed)
+            # st.dataframe(df_changed)
             l = [{'event_id': row['event_id'], 'flag_interest': row['flag_interest']} for _, row in df_changed.iterrows()]
             with st.form("update database with interest choices"):
                 submitted = st.form_submit_button("Update database")
@@ -71,62 +84,25 @@ if action == "Select New Events !":
                     update_events_interest_flag(event_ids_totrueflag,event_ids_to_falseflag,engine)
                     st.success("Database updated successfully!")
                     get_all_events.clear()
-                    st.session_state['data'] = get_all_events()
+                    st.session_state['data'],st.session_state['categories'] = get_all_events()
             st.button('Reload pleaaase')
 
 elif action == "See my interests":
     st.header("My interested Events !")
     df_interests = st.session_state.data[st.session_state.data['flag_interest']==True]
     if not df_interests.empty:  
-        st.dataframe(
-            df_interests#[st.session_state["cols_run"]]
-                .sort_values(by="updated_at", ascending=False),
-            use_container_width=True
-        )
+ 
         df_ints = transform_lat_lon(df_interests)
-        # st.write(df_ints)
         deck = get_deck_maps(df_ints)
-        st.pydeck_chart(deck)
+        st.pydeck_chart(deck,on_select="rerun",key='deck_interests')
+
+        if 'deck_interests' in st.session_state:
+            res = expose_selected_item(st.session_state['deck_interests'],df_ints)
+            if res:
+                # st.write("You selected:", res)
+                event_card(res)
+            else:
+                st.info("Select a point on the map to see details here.")
 
     
-    # with st.form("add_product_form"):
-    #     name = st.text_input("Nom du produit")
-    #     price = st.number_input("Prix (€)", min_value=0.0, step=0.01)
-    #     category = st.selectbox("Catégorie", ["Electronics", "Furniture", "Clothing", "Food", "Other"])
-        
-    #     submitted = st.form_submit_button("Ajouter")
-        
-    #     if submitted:
-    #         if name and price > 0:
-    #             if add_product(name, price, category):
-    #                 st.success(f"✅ Produit '{name}' ajouté avec succès!")
-    #                 st.balloons()
-    #             else:
-    #                 st.error("❌ Erreur lors de l'ajout du produit")
-    #         else:
-    #             st.warning("⚠️ Veuillez remplir tous les champs correctement")
-
-# Supprimer un produit
-# elif action == "Supprimer un produit":
-#     st.header("Supprimer un produit")
-    
-#     df = get_products_df()
-    
-#     if not df.empty:
-#         product_id = st.selectbox(
-#             "Sélectionnez un produit à supprimer",
-#             options=df['ID'].tolist(),
-#             format_func=lambda x: f"{df[df['ID']==x]['Nom'].values[0]} (ID: {x})"
-#         )
-        
-#         if st.button("🗑️ Supprimer", type="primary"):
-#             if delete_product(product_id):
-#                 st.success("✅ Produit supprimé avec succès!")
-#                 st.rerun()
-#             else:
-#                 st.error("❌ Erreur lors de la suppression")
-#     else:
-#         st.info("Aucun produit à supprimer")
-
-# Footer
 st.markdown("---")
