@@ -7,8 +7,7 @@ import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.db_utils import update_events_interest_flag
 from expo_app_mica.apputils import get_all_events
-from apputils import transform_lat_lon,check_password
-import pydeck as pdk
+from apputils import transform_lat_lon,check_password,get_deck_maps
 
 # Configuration de la page
 st.set_page_config(
@@ -85,33 +84,8 @@ elif action == "See my interests":
             use_container_width=True
         )
         df_ints = transform_lat_lon(df_interests)
-        st.write(df_ints)
-        
-        layer = pdk.Layer(
-            "ScatterplotLayer",
-            data=df_ints,
-            get_position='[lon, lat]',
-            get_radius=80,
-            get_fill_color='color', #tester get_color
-            pickable=True,
-        )
-
-        view_state = pdk.ViewState(
-            latitude=df_ints["lat"].mean(),
-            longitude=df_ints["lon"].mean(),
-            zoom=12,
-        )
-
-        deck = pdk.Deck(
-            layers=[layer],
-            initial_view_state=view_state,
-            tooltip={
-                "html": """
-                <b>{title}</b><br/>
-                Catégorie : {qfap_tags}
-                """
-            }
-        )
+        # st.write(df_ints)
+        deck = get_deck_maps(df_ints)
         st.pydeck_chart(deck)
 
     
