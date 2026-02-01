@@ -89,7 +89,10 @@ if action == "Select New Events !":
 
 elif action == "See my interests":
     st.header("My interested Events !")
-    df_interests = st.session_state.data[st.session_state.data['flag_interest']==True]
+    df_interests = st.session_state.data[
+        (st.session_state.data['flag_interest']==True) & 
+        (st.session_state.data['date_end']>=pd.Timestamp.now())
+    ]
     if not df_interests.empty:  
  
         df_ints = transform_lat_lon(df_interests)
@@ -99,7 +102,6 @@ elif action == "See my interests":
         if 'deck_interests' in st.session_state:
             res = expose_selected_item(st.session_state['deck_interests'],df_ints)
             if res:
-                # st.write("You selected:", res)
                 event_card(res)
             else:
                 st.info("Select a point on the map to see details here.")
